@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+    <link rel="stylesheet" href="basic.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+    <script src="../jquery.js"></script>
+    <script src="../underscore.js"></script>
+    <script src="../stations.js"></script>
+    <script src="trip_counts.js"></script>
+    <script src="connections.js"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div>
+      <input id="count-threshold" type="range" min="1" max="500" value="500" style="width: 800px" />
+      <span id="count-threshold-label">500</span>
+    </div>
+  </body>
+</html>
