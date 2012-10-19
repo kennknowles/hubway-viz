@@ -16,7 +16,9 @@ $(document).ready(function() {
     map.setView(new L.LatLng(42.35473836290108, -71.09716415405273), 13);
 
     _(stations).each(function(station) {
-        station.marker = L.marker([station.lat, station.lng]).addTo(map).bindPopup(station.terminalName);
+        station.marker = L.circle([station.lat, station.lng], 80, {color: '#00FF5E', weight: 2, fillOpacity: 0.4, opacity: 1.0})
+            .addTo(map)
+            .bindPopup(station.name);
     });
 
     var stations_by_id = {};
@@ -34,8 +36,8 @@ $(document).ready(function() {
                 
         var line = L.polyline([stations_by_id[start_and_end[0]].marker.getLatLng(),
                                stations_by_id[start_and_end[1]].marker.getLatLng()],
-                              {color: 'red', weight: 1})
-            .bindPopup(count + ' rides')
+                              {color: 'red', weight: 1});
+            //.bindPopup(count + ' rides')
 
         if (count_string in lines_by_count) {
             lines_by_count[count_string].push(line)
@@ -54,7 +56,7 @@ $(document).ready(function() {
             for(var i = old_value; i>=new_value; i--) {
                 console.log('Revealing ', (lines_by_count[i] || []).length, ' lines with ', i, ' rides.');
                 _(lines_by_count[i]).each(function(line) {
-                    line.addTo(map);
+                    line.addTo(map).bringToBack();
                 });
             }
         } else {
