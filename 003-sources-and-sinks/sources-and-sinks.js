@@ -58,6 +58,7 @@ $(document).ready(function() {
         var proportion = (flow > 0) ? (flow / max_flow) : (flow / min_flow);
 
         var color = add(white, scale(proportion, color_direction));
+        var radius = Math.sqrt(station.flow.in + station.flow.out) * 0.9;
 
         console.log(flow, color_direction, proportion, color);
 
@@ -66,7 +67,7 @@ $(document).ready(function() {
             + Math.round(color[1] * 0xFF).toString(16) 
             + Math.round(color[2] * 0xFF).toString(16);
         
-        station.circle = L.circle([station.lat, station.lng], 100, {color: 'black', weight: 1, fillColor: color_string, fillOpacity: 1.0, opacity: 0.7})
+        station.circle = L.circle([station.lat, station.lng], radius, {color: 'black', weight: 1, fillColor: color_string, fillOpacity: 1.0, opacity: 0.7})
             .addTo(map)
             .bindPopup(station.name + ': ' + (station.flow.out - station.flow.in));
     });
