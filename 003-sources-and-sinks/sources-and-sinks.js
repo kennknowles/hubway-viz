@@ -30,45 +30,46 @@ $(document).ready(function() {
         stations_by_id[end].flow.in += count;
     });
 
-    // bounds for color interpolation
-    var min_flow = _.chain(stations).map(function(station) { return station.flow.out - station.flow.in; }).min().value();
-    var max_flow = _.chain(stations).map(function(station) { return station.flow.out - station.flow.in; }).max().value();
-    var flow_range = min_flow - max_flow;
-    
-    // vector stuff
-    function add(v1, v2) { return _(_.zip(v1, v2)).map(function(x1_x2) { return x1_x2[0] + x1_x2[1]; }); };
-    function scale(k, v) { return _(v).map(function(x) { return k * x; }); };
+    var in_color = '#ff0000';
+    var out_color = '#0000ff';
+    var scale_factor = 0.013;
+    var rect_width = 10;
 
-    var max_out_color = [1.0, 0, 0];
-    var min_in_color = [0, 0, 1.0];
-    var white = [1.0, 1.0, 1.0];
-    var out_direction = add(max_out_color, scale(-1, white)); // max_out_color - white; so at white + direction = max_out_color
-    var in_direction = add(min_in_color, scale(-1, white));
+    function rect_top_lat(map, base_latLng, height_pixels) {
+        return map.layerPointToLatLng(map.latLngToLayerPoint(base_latLng).add(L.point(0, height_pixels))).lat;
+    }
 
-    console.log(white, scale(-1, white), _.zip(white, white));
-    console.log(out_direction, in_direction);
+    function init_rects() {
+        _.chain(stations_by_id)
+            .sortBy(function(station) { return -station.lat; })
+            .each(function(station) {
+                station.out_rect = L.rectangle([[station.lat, station.lng], [station.lat, station.lng]],
+                                               {color: 'black', weight: 1, fillColor: out_color, fillOpacity: 1.0, opacity: 1.0})
+                    .addTo(map)
+                    .bindPopup(station.name + ' outflow: ' + station.flow.out);
+                
+                station.in_rect = L.rectangle([[station.lat, station.lng], [station.lat, station.lng]],
+                                              {color: 'black', weight: 1, fillColor: in_color, fillOpacity: 1.0, opacity: 1.0})
+                    .addTo(map)
+                    .bindPopup(station.name + ' inflow: ' + station.flow.in);
+            })
+            .value();
+    }
 
-    var out_interpolation_degree = 1.0;
-    var in_interpolation_degree = 1.0;
+    function resize_rects() {
+        console.log('Resize');
+        _(stations_by_id).each(function(station) {
+            var origin = L.latLng(station.lat, station.lng);
 
-    // Interpolate positive and negative flow separately, leaving white as zero
-    _(stations_by_id).each(function(station) {
-        var flow = station.flow.out - station.flow.in;
-        var color_direction = (flow > 0) ? out_direction : in_direction;
-        var proportion = (flow > 0) ? (flow / max_flow) : (flow / min_flow);
+            station.out_rect.setBounds([origin,
+                                        map.layerPointToLatLng(map.latLngToLayerPoint(origin).add(L.point(-rect_width, -scale_factor * station.flow.out)))]);
+            
+            station.in_rect.setBounds([origin,
+                                       map.layerPointToLatLng(map.latLngToLayerPoint(origin).add(L.point(rect_width, -scale_factor * station.flow.in)))]);
+        });
+    }
 
-        var color = add(white, scale(proportion, color_direction));
-        var radius = Math.sqrt(station.flow.in + station.flow.out) * 0.9;
-
-        console.log(flow, color_direction, proportion, color);
-
-        var color_string = '#' 
-            + Math.round(color[0] * 0xFF).toString(16) 
-            + Math.round(color[1] * 0xFF).toString(16) 
-            + Math.round(color[2] * 0xFF).toString(16);
-        
-        station.circle = L.circle([station.lat, station.lng], radius, {color: 'black', weight: 1, fillColor: color_string, fillOpacity: 1.0, opacity: 0.7})
-            .addTo(map)
-            .bindPopup(station.name + ': ' + (station.flow.out - station.flow.in));
-    });
+    init_rects();
+    resize_rects();
+    map.on('viewreset', resize_rects);
 });
